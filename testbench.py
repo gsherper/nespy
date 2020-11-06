@@ -4,7 +4,7 @@ from cpu import *
 cpu = CPU()
 system_bus = Bus()
 system_bus.connect_device(cpu)
-
+cpu.reset()
 cpu.clock()
 
 # test_read = cpu.read(0x0000)

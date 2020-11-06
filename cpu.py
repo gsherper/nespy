@@ -3,30 +3,66 @@ from instruction_set import *
 class CPU:
 
     def __init__(self):
+        self.reg_accumulator = None
+        self.reg_x_index = None
+        self.reg_y_index = None
+        self.reg_status = None
+        self.program_counter = None
+        self.stack_pointer = None
+        self.data_fetched = None
+        self.address_abs = None
+        self.address_rel = None
+        self.op_code = None
+        self.cycles = 0
+        self.bus = None
+
+    def reset(self):
+        # Async
         self.reg_accumulator = 0x00
         self.reg_x_index = 0x00
         self.reg_y_index = 0x00
         self.reg_status = 0x00
-        self.program_counter = 0x00
-        self.stack_pointer = 0x00
 
-        # SR Flgas Register (bit 7 to bit 0)
-        self.flag_negative = None
-        self.flag_overflow = None
-        self.flag_break = None
-        self.flag_decimal = None
-        self.flag_interrupt = None
-        self.flag_zero = None
-        self.flag_carry = None
+        self.address_abs = 0xFFFC
+        lo = self.read(self.address_abs + 0)
+        hi = self.read(self.address_abs + 1)
+        self.program_counter = (hi << 8) | lo
 
-        self.data_fetched = None
-        self.address_abs = 0x0000
+        self.stack_pointer = 0xFF
+        self.data_fetched = 0x00
+        self.address_abs = 0x00
         self.address_rel = 0x00
-        self.opcode = None
-        self.cycles = 0
-        pass
+        self.cycles = 8
 
 
+
+    def iqr(self):
+        # Async
+        if self.get_flag(Flags.I) == 0:
+            self.interrupt(address=0xFFFE, cycles=7)
+
+    def nmi(self):
+        # Async
+        self.interrupt(address=0xFFFA, cycles=8)
+
+    def interrupt(self, address, cycles):
+        self.write(0x0100 + self.stack_pointer, (self.program_counter >> 8) & 0x00FF)
+        self.stack_pointer -= 1
+        self.write(0x0100 + self.stack_pointer, self.program_counter & 0x00FF)
+        self.stack_pointer -= 1
+
+        self.update_flag(Flags.B, 0)
+        self.update_flag(Flags.U, 1)
+        self.update_flag(Flags.I, 1)
+        self.write(0x0100 + self.stack_pointer, self.status)
+        self.stack_pointer -= 1
+
+        self.address_abs = address
+        lo = self.read(self.address_abs + 0)
+        hi = self.read(self.address_abs + 1)
+        self.program_counter = (hi << 8) | lo
+
+        self.cycles = cycles
 
     def get_flag(self, flag):
         return (self.reg_status >> flag.value) & 0x1
@@ -51,6 +87,11 @@ class CPU:
 
     def addr_implied(self):
         print("addr_implied")
+        self.data_fetched = self.reg_accumulator
+        return 0
+
+    def addr_accumulator(self):
+        print("addr_accumulator")
         self.data_fetched = self.reg_accumulator
         return 0
 
@@ -147,11 +188,10 @@ class CPU:
 
     def fetch(self):
         if self.opcode["addr_mode"] != AddrMode.ADDR_IMM:
-            self.data_fetched
+            self.data_fetched = self.read(self.address_abs)
         return self.data_fetched
 
     def op_and(self):
-
         data = self.fetch()
         self.reg_accumulator &= data
         self.update_flag(Flags.Z, self.reg_accumulator == 0x00)
@@ -159,7 +199,6 @@ class CPU:
         return 1
 
     def op_bcs(self):
-
         if self.get_flag(Flags.C) == 1:
             self.cycles += 1
             self.address_abs = self.program_counter + self.address_rel
@@ -171,7 +210,6 @@ class CPU:
         return 0
 
     def op_bcc(self):
-
         if self.get_flag(Flags.C) == 0:
             self.cycles += 1
             self.address_abs = self.program_counter + self.address_rel
@@ -243,7 +281,6 @@ class CPU:
         return 0
 
     def op_bvs(self):
-
         if self.get_flag(Flags.V) == 1:
             self.cycles += 1
             self.address_abs = self.program_counter + self.address_rel
@@ -256,19 +293,96 @@ class CPU:
 
     def op_clc(self):
         self.update_flag(Flags.C, 0)
+        return 0
 
+    def op_cld(self):
+        self.update_flag(Flags.D, 0)
+        return 0
 
-    def nmi(self):
-        # Async
-        pass
+    def op_cli(self):
+        self.update_flag(Flags.I, 0)
+        return 0
 
-    def iqr(self):
-        # Async
-        pass
+    def op_clv(self):
+        self.update_flag(Flags.V, 0)
+        return 0
 
-    def reset(self):
-        # Async
-        pass
+    def op_adc(self):
+        data = self.fetch()
+        temp = self.reg_accumulator + data + self.get_flag(Flags.C)
+        self.update_flag(Flags.C, temp > 255)
+        self.update_flag(Flags.Z, (temp & 0x00FF) == 0)
+        self.update_flag(Flags.N, temp & 0x80)
+        self.update_flag(Flags.V, (not (self.reg_accumulator ^ data) & (self.reg_accumulator ^ temp)) & 0x0080)
+        self.reg_accumulator = temp & 0x00FF
+        return 1
+
+    def op_sbc(self):
+        # a = a - m - (1-c) --> a = a + -m + 1 + c
+        data = self.fetch()
+        # 2's compliments
+        value = data ^ 0x00FF
+        temp = self.reg_accumulator + value + self.get_flag(Flags.C)
+        self.update_flag(Flags.C, temp & 0XFF00)
+        self.update_flag(Flags.Z, (temp & 0x00FF) == 0)
+        self.update_flag(Flags.N, temp & 0x80)
+        self.update_flag(Flags.V, (not(self.reg_accumulator ^ data) & (self.reg_accumulator ^ temp)) & 0x0080)
+        self.reg_accumulator = temp & 0x00FF
+        return 1
+
+    def op_pha(self):
+        self.write(0x1000 + self.stack_pointer, self.reg_accumulator)
+        self.stack_pointer -= 1
+        return 0
+
+    def op_pla(self):
+        self.stack_pointer += 1
+        self.read(0x1000 + self.stack_pointer, self.reg_accumulator)
+        self.update_flag(Flags.Z, self.reg_accumulator == 0)
+        self.update_flag(Flags.N, self.reg_accumulator & 0x80)
+        return 0
+
+    def op_php(self):
+        self.update_flag(Flags.B, 1)
+        self.update_flag(Flags.U, 1)
+        self.write(0x1000 + self.stack_pointer, self.reg_status)
+        self.stack_pointer -= 1
+        self.update_flag(Flags.B, 0)
+        self.update_flag(Flags.U, 0)
+        return 0
+
+    def op_plp(self):
+        self.stack_pointer += 1
+        self.read(0x1000 + self.stack_pointer, self.reg_status)
+        self.update_flag(Flags.U, 1)   # ? don't see in doc
+        return 0
+
+    def op_rti(self):
+        self.stack_pointer += 1
+        self.reg_status = self.read(0x0100 + self.stack_pointer)
+        self.update_flag(Flags.B, 0)
+        self.update_flag(Flags.U, 0)
+        self.stack_pointer += 1
+        lo = self.read(0x0100 + self.stack_pointer)
+        self.stack_pointer += 1
+        hi = self.read(0x0100 + self.stack_pointer)
+        self.program_counter = (hi << 8) | lo
+        return 0
+
+    def op_asl(self):
+        value = self.fetch() << 1
+        if value & 0xFF00 > 1:
+            self.update_flag(Flags.C, 1)
+        if value & 0x00FF == 0:
+            self.update_flag(Flags.Z, 1)
+        if value & 0x80:
+            self.update_flag(Flags.N, 1)
+        if self.opcode["addr_mode"] == AddrMode.ADDR_ACCUMULATOR:
+            self.reg_accumulator = value & 0x00FF
+        else:
+            self.write(self.address_abs, value & 0x00FF)
+        return 0
+
 
     def execute_opcode(self, mnemonic):
         pass
@@ -287,7 +401,6 @@ class CPU:
 
 
     def read(self, address):
-        print('read')
         return self.bus.read(address=address, read_only=False)
 
     def write(self, address, data):

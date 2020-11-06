@@ -33,7 +33,7 @@ class AddrMode(Enum):
     ADDR_ZERO_PAGE_Y = "addr_zeropage_y"  #
 
 INSTRUCTION_SET = {
-    # ADC - Add Memory to Accumulator with Carry
+    ## ADC - Add Memory to Accumulator with Carry
     0x69: {"mnemonic": "ADC", "bytes": 2, "cycles": 2, "addr_mode": AddrMode.ADDR_IMM},
     0x65: {"mnemonic": "ADC", "bytes": 2, "cycles": 3, "addr_mode": AddrMode.ADDR_ZERO_PAGE},
     0x75: {"mnemonic": "ADC", "bytes": 2, "cycles": 4, "addr_mode": AddrMode.ADDR_ZERO_PAGE_X},
@@ -42,7 +42,7 @@ INSTRUCTION_SET = {
     0x79: {"mnemonic": "ADC", "bytes": 3, "cycles": 4, "addr_mode": AddrMode.ADDR_ABS_Y},
     0x61: {"mnemonic": "ADC", "bytes": 2, "cycles": 6, "addr_mode": AddrMode.ADDR_INDIRECT_X},
     0x71: {"mnemonic": "ADC", "bytes": 2, "cycles": 5, "addr_mode": AddrMode.ADDR_INDIRECT_Y},
-    # AND - AND Memory with Accumulator
+    ## AND - AND Memory with Accumulator
     0x29: {"mnemonic": "AND", "bytes": 2, "cycles": 2, "addr_mode": AddrMode.ADDR_IMM},
     0x25: {"mnemonic": "AND", "bytes": 2, "cycles": 3, "addr_mode": AddrMode.ADDR_ZERO_PAGE},
     0x35: {"mnemonic": "AND", "bytes": 2, "cycles": 4, "addr_mode": AddrMode.ADDR_ZERO_PAGE_X},
@@ -57,34 +57,34 @@ INSTRUCTION_SET = {
     0x16: {"mnemonic": "ASL", "bytes": 2, "cycles": 6, "addr_mode": AddrMode.ADDR_ZERO_PAGE_X},
     0x0E: {"mnemonic": "ASL", "bytes": 3, "cycles": 6, "addr_mode": AddrMode.ADDR_ABS},
     0x1E: {"mnemonic": "ASL", "bytes": 3, "cycles": 7, "addr_mode": AddrMode.ADDR_ABS_X},
-    # BCC - Branch on Carry Clear
+    ## BCC - Branch on Carry Clear
     0x90: {"mnemonic": "BCC", "bytes": 2, "cycles": 2, "addr_mode": AddrMode.ADDR_RELATIVE},
-    # BCS - Branch on Carry SET
+    ## BCS - Branch on Carry SET
     0xB0: {"mnemonic": "BCS", "bytes": 2, "cycles": 2, "addr_mode": AddrMode.ADDR_RELATIVE},
-    # BEQ - Branch on Result Zero
+    ## BEQ - Branch on Result Zero
     0xF0: {"mnemonic": "BEQ", "bytes": 2, "cycles": 2, "addr_mode": AddrMode.ADDR_RELATIVE},
     # BIT - Test Bits in Memory with Accumulator
     0x24: {"mnemonic": "BIT", "bytes": 2, "cycles": 3, "addr_mode": AddrMode.ADDR_ZERO_PAGE},
     0x2C: {"mnemonic": "BIT", "bytes": 3, "cycles": 4, "addr_mode": AddrMode.ADDR_ABS},
-    # BMI - Branch on Result Minus
+    ## BMI - Branch on Result Minus
     0x30: {"mnemonic": "BMI", "bytes": 2, "cycles": 2, "addr_mode": AddrMode.ADDR_RELATIVE},
-    # BNE - Branch on Result Not Zero
+    ## BNE - Branch on Result Not Zero
     0xD0: {"mnemonic": "BNE", "bytes": 2, "cycles": 2, "addr_mode": AddrMode.ADDR_RELATIVE},
-    # BPL - Branch on Result Plus
+    ## BPL - Branch on Result Plus
     0x10: {"mnemonic": "BPL", "bytes": 2, "cycles": 2, "addr_mode": AddrMode.ADDR_RELATIVE},
     # BRK - Force Break
     0x00: {"mnemonic": "BRK", "bytes": 1, "cycles": 7, "addr_mode": AddrMode.ADDR_IMPLIED},
-    # BVC - Branch on Overflow Clear
+    ## BVC - Branch on Overflow Clear
     0x50: {"mnemonic": "BVC", "bytes": 2, "cycles": 2, "addr_mode": AddrMode.ADDR_RELATIVE},
-    # BVS - Branch on Overflow Set
+    ## BVS - Branch on Overflow Set
     0x70: {"mnemonic": "BVS", "bytes": 2, "cycles": 2, "addr_mode": AddrMode.ADDR_RELATIVE},
-    # CLC - Clear Carry Flag
+    ## CLC - Clear Carry Flag
     0x18: {"mnemonic": "CLC", "bytes": 1, "cycles": 2, "addr_mode": AddrMode.ADDR_IMPLIED},
-    # CLD - Clear Decimal Mode
+    ## CLD - Clear Decimal Mode
     0xD8: {"mnemonic": "CLD", "bytes": 1, "cycles": 2, "addr_mode": AddrMode.ADDR_IMPLIED},
-    # CLI - Clear Interrupt Disable Bit
+    ## CLI - Clear Interrupt Disable Bit
     0x58: {"mnemonic": "CLI", "bytes": 1, "cycles": 2, "addr_mode": AddrMode.ADDR_IMPLIED},
-    # CLV - Clear Overflow Flag
+    ## CLV - Clear Overflow Flag
     0xB8: {"mnemonic": "CLI", "bytes": 1, "cycles": 2, "addr_mode": AddrMode.ADDR_IMPLIED},
     # CMP - Compare Memory with Accumulator
     0xC9: {"mnemonic": "CMP", "bytes": 2, "cycles": 2, "addr_mode": AddrMode.ADDR_IMM},
@@ -173,13 +173,13 @@ INSTRUCTION_SET = {
     0x19: {"mnemonic": "ORA", "bytes": 3, "cycles": 4, "addr_mode": AddrMode.ADDR_ABS_Y},
     0x01: {"mnemonic": "ORA", "bytes": 2, "cycles": 6, "addr_mode": AddrMode.ADDR_INDIRECT_X},
     0x11: {"mnemonic": "ORA", "bytes": 2, "cycles": 5, "addr_mode": AddrMode.ADDR_INDIRECT_Y},
-    # PHA - Push Accumulator on Stack
+    ## PHA - Push Accumulator on Stack
     0x48: {"mnemonic": "PHA", "bytes": 1, "cycles": 3, "addr_mode": AddrMode.ADDR_IMPLIED},
-    # PHP - Push Processor Status on Stack
+    ## PHP - Push Processor Status on Stack
     0x08: {"mnemonic": "PHP", "bytes": 1, "cycles": 3, "addr_mode": AddrMode.ADDR_IMPLIED},
-    # PLA - Pull Accumulator Status on Stack
+    ## PLA - Pull Accumulator Status on Stack
     0x68: {"mnemonic": "PLA", "bytes": 1, "cycles": 4, "addr_mode": AddrMode.ADDR_IMPLIED},
-    # PLP - Pull Processor Status on Stack
+    ## PLP - Pull Processor Status on Stack
     0x28: {"mnemonic": "PLP", "bytes": 1, "cycles": 4, "addr_mode": AddrMode.ADDR_IMPLIED},
     # ROL - Rotate One Bit Left (Memory or Accumulator)
     0x2A: {"mnemonic": "ROL", "bytes": 1, "cycles": 2, "addr_mode": AddrMode.ADDR_ACCUMULATOR},
@@ -193,11 +193,11 @@ INSTRUCTION_SET = {
     0x76: {"mnemonic": "ROL", "bytes": 2, "cycles": 6, "addr_mode": AddrMode.ADDR_ZERO_PAGE_X},
     0x6E: {"mnemonic": "ROL", "bytes": 3, "cycles": 6, "addr_mode": AddrMode.ADDR_ABS},
     0x7E: {"mnemonic": "ROL", "bytes": 3, "cycles": 7, "addr_mode": AddrMode.ADDR_ABS_X},
-    # RTI - Return from Interrupt
+    ## RTI - Return from Interrupt
     0x40: {"mnemonic": "RTI", "bytes": 1, "cycles": 6, "addr_mode": AddrMode.ADDR_IMPLIED},
     # RTS - Return from Subroutine
     0x60: {"mnemonic": "RTS", "bytes": 1, "cycles": 6, "addr_mode": AddrMode.ADDR_IMPLIED},
-    # SBC - OR Memory with Accumulator
+    ## SBC - OR Memory with Accumulator
     0xE9: {"mnemonic": "SBC", "bytes": 2, "cycles": 2, "addr_mode": AddrMode.ADDR_IMM},
     0xE5: {"mnemonic": "SBC", "bytes": 2, "cycles": 3, "addr_mode": AddrMode.ADDR_ZERO_PAGE},
     0xF5: {"mnemonic": "SBC", "bytes": 2, "cycles": 4, "addr_mode": AddrMode.ADDR_ZERO_PAGE_X},
