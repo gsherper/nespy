@@ -1,4 +1,3 @@
-from cpu import *
 import numpy as np
 
 class Bus:
@@ -10,9 +9,9 @@ class Bus:
         # 64 KB Ram
         self.ram = np.zeros(64*1024, dtype=int)
 
-    def connect_cpu(self, cpu):
-        self.cpu = cpu
-        self.cpu.bus = self
+    def connect_device(self, device):
+        # self.cpu = cpu
+        device.bus = self
 
     def write(self, address, data):
         if 0x0000 <= address <= 0xFFFF:
@@ -21,7 +20,8 @@ class Bus:
 
     def read(self, address, read_only=False):
         if 0x0000 <= address <= 0xFFFF:
-            return self.ram[address]
+            return 0x25
+            #return self.ram[address]
         else:
             return 0x00
         pass
