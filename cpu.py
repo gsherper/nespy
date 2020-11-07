@@ -383,6 +383,294 @@ class CPU:
             self.write(self.address_abs, value & 0x00FF)
         return 0
 
+    def op_brk(self):
+        self.update_flag(Flags.I, 1)
+        self.update_flag(Flags.U, 1)
+        self.update_flag(Flags.B, 1)
+        self.program_counter += 1
+        self.write(0x0100 + self.stack_pointer, (self.program_counter >> 8) & 0x00FF)
+        self.stack_pointer -= 1
+        self.write(0x0100 + self.stack_pointer, self.program_counter & 0x00FF)
+        self.stack_pointer -= 1
+        self.write(0x0100 + self.stack_pointer, self.status)
+        self.stack_pointer -= 1
+
+        lo = self.read(0xFFFE + 0)
+        hi = self.read(0xFFFE + 1)
+        self.program_counter = (hi << 8) | lo
+        return 0
+
+    def op_tya(self):
+        self.reg_accumulator = self.reg_y_index
+        if self.reg_accumulator & 0x00FF == 0:
+            self.update_flag(Flags.Z, 1)
+        if self.reg_accumulator & 0x80:
+            self.update_flag(Flags.N, 1)
+        return 0
+
+    def op_txs(self):
+        self.write(0x1000 + self.stack_pointer, self.reg_x_index)
+        self.stack_pointer -= 1
+        return 0
+
+    def op_txa(self):
+        self.reg_accumulator = self.reg_x_index
+        if self.reg_accumulator & 0x00FF == 0:
+            self.update_flag(Flags.Z, 1)
+        if self.reg_accumulator & 0x80:
+            self.update_flag(Flags.N, 1)
+        return 0
+
+    def op_tsx(self):
+        self.stack_pointer += 1
+        self.reg_x_index = self.read(0x0100 + self.stack_pointer)
+        if self.reg_accumulator & 0x00FF == 0:
+            self.update_flag(Flags.Z, 1)
+        if self.reg_accumulator & 0x80:
+            self.update_flag(Flags.N, 1)
+        return 0
+
+    def op_tay(self):
+        self.reg_y_index = self.reg_accumulator
+        if self.reg_y_index & 0x00FF == 0:
+            self.update_flag(Flags.Z, 1)
+        if self.reg_y_index & 0x80:
+            self.update_flag(Flags.N, 1)
+        return 0
+
+    def op_tax(self):
+        self.reg_x_index = self.reg_accumulator
+        if self.reg_x_index & 0x00FF == 0:
+            self.update_flag(Flags.Z, 1)
+        if self.reg_x_index & 0x80:
+            self.update_flag(Flags.N, 1)
+        return 0
+
+    def op_sty(self):
+        self.write(self.address_abs, self.reg_y_index)
+        return 0
+
+    def op_stx(self):
+        self.write(self.address_abs, self.reg_x_index)
+        return 0
+
+    def op_sta(self):
+        self.write(self.address_abs, self.reg_accumulator)
+        return 0
+
+    def op_sei(self):
+        self.update_flag(Flags.I, 1)
+        return 0
+
+    def op_sed(self):
+        self.update_flag(Flags.D, 1)
+        return 0
+
+    def op_sec(self):
+        self.update_flag(Flags.C, 1)
+        return 0
+
+    def op_cmp(self):
+        value = self.fetch()
+        if self.reg_accumulator >= value:
+            self.update_flag(Flags.C, 1)
+        if self.reg_accumulator == value:
+            self.update_flag(Flags.Z, 1)
+        diff = self.reg_accumulator - value
+        if diff & 0x80:
+            self.update_flag(Flags.N, 1)
+        return 0
+
+    def op_cpx(self):
+        value = self.fetch()
+        if self.reg_x_index >= value:
+            self.update_flag(Flags.C, 1)
+        if self.reg_x_index == value:
+            self.update_flag(Flags.Z, 1)
+        diff = self.reg_x_index - value
+        if diff & 0x80:
+            self.update_flag(Flags.N, 1)
+        return 0
+
+    def op_cpy(self):
+        value = self.fetch()
+        if self.reg_y_index >= value:
+            self.update_flag(Flags.C, 1)
+        if self.reg_y_index == value:
+            self.update_flag(Flags.Z, 1)
+        diff = self.reg_y_index - value
+        if diff & 0x80:
+            self.update_flag(Flags.N, 1)
+        return 0
+
+    def op_dec(self):
+        value = self.fetch() - 1
+        self.write(self.address_abs, value)
+        if value == 0:
+            self.update_flag(Flags.Z, 1)
+        if value & 0x80:
+            self.update_flag(Flags.N, 1)
+        return 0
+
+    def op_dex(self):
+        self.reg_x_index -= 1
+        if self.reg_x_index == 0:
+            self.update_flag(Flags.Z, 1)
+        if self.reg_x_index & 0x80:
+            self.update_flag(Flags.N, 1)
+        return 0
+
+    def op_dey(self):
+        self.reg_y_index -= 1
+        if self.reg_y_index == 0:
+            self.update_flag(Flags.Z, 1)
+        if self.reg_y_index & 0x80:
+            self.update_flag(Flags.N, 1)
+        return 0
+
+    def op_inc(self):
+        value = self.fetch() + 1
+        self.write(self.address_abs, value)
+        if self.reg_y_index == 0:
+            self.update_flag(Flags.Z, 1)
+        if self.reg_y_index & 0x80:
+            self.update_flag(Flags.N, 1)
+        return 0
+
+    def op_inx(self):
+        self.reg_x_index += 1
+        if self.reg_x_index == 0:
+            self.update_flag(Flags.Z, 1)
+        if self.reg_x_index & 0x80:
+            self.update_flag(Flags.N, 1)
+        return 0
+
+    def op_iny(self):
+        self.reg_y_index += 1
+        if self.reg_y_index == 0:
+            self.update_flag(Flags.Z, 1)
+        if self.reg_y_index & 0x80:
+            self.update_flag(Flags.N, 1)
+        return 0
+
+    def op_nop(self):
+        return 0
+
+    def op_ora(self):
+        value = self.fetch()
+        self.reg_accumulator = value | self.reg_accumulator
+        if self.reg_accumulator == 0:
+            self.update_flag(Flags.Z, 1)
+        if self.reg_accumulator & 0x80:
+            self.update_flag(Flags.N, 1)
+        return 0
+
+    def op_eor(self):
+        value = self.fetch()
+        self.reg_accumulator = value ^ self.reg_accumulator
+        if self.reg_accumulator == 0:
+            self.update_flag(Flags.Z, 1)
+        if self.reg_accumulator & 0x80:
+            self.update_flag(Flags.N, 1)
+        return 0
+
+    def op_lda(self):
+        self.reg_accumulator = self.fetch()
+        if self.reg_accumulator == 0:
+            self.update_flag(Flags.Z, 1)
+        if self.reg_accumulator & 0x80:
+            self.update_flag(Flags.N, 1)
+        return 0
+
+    def op_ldx(self):
+        self.reg_x_index = self.fetch()
+        if self.reg_x_index == 0:
+            self.update_flag(Flags.Z, 1)
+        if self.reg_x_index & 0x80:
+            self.update_flag(Flags.N, 1)
+        return 0
+
+    def op_ldy(self):
+        self.reg_y_index = self.fetch()
+        if self.reg_y_index == 0:
+            self.update_flag(Flags.Z, 1)
+        if self.reg_y_index & 0x80:
+            self.update_flag(Flags.N, 1)
+        return 0
+
+    def op_lsr(self):
+        value = self.fetch() >> 1
+        if value == 0:
+            self.update_flag(Flags.Z, 1)
+        if value & 0x80:
+            self.update_flag(Flags.N, 1)
+        if self.opcode["address_mode"] == AddrMode.ADDR_ACCUMULATOR:
+            self.reg_accumulator = value
+        else:
+            self.write(self.address_abs, value & 0xFF)
+        return 0
+
+    def op_ror(self):
+        value = self.fetch()
+        self.update_flag(Flags.C, value & 0x1)
+        new_msb = (value & 0x1) << 7
+        value = (value >> 1) + new_msb
+        if value == 0:
+            self.update_flag(Flags.Z, 1)
+        if value & 0x80:
+            self.update_flag(Flags.N, 1)
+        if self.opcode["address_mode"] == AddrMode.ADDR_ACCUMULATOR:
+            self.reg_accumulator = value
+        else:
+            self.write(self.address_abs, value & 0xFF)
+        return 0
+
+    def op_rol(self):
+        value = self.fetch()
+        self.update_flag(Flags.C, value & 0x80)
+        new_lsb = (value & 0x80) >> 7
+        value = (value << 1) + new_lsb
+        if value == 0:
+            self.update_flag(Flags.Z, 1)
+        if value & 0x80:
+            self.update_flag(Flags.N, 1)
+        if self.opcode["address_mode"] == AddrMode.ADDR_ACCUMULATOR:
+            self.reg_accumulator = value
+        else:
+            self.write(self.address_abs, value & 0xFF)
+        return 0
+
+    def op_rts(self):
+        self.stack_pointer += 1
+        lo = self.read(0x0100 + self.stack_pointer)
+        self.stack_pointer += 1
+        hi = self.read(0x0100 + self.stack_pointer)
+        self.program_counter = (hi << 8) | lo
+        self.program_counter += 1
+        return 0
+
+    def op_jsr(self):
+        self.program_counter -= 1
+        self.write(0x0100 + self.stack_pointer, (self.program_counter >> 8) & 0x00FF)
+        self.stack_pointer -= 1
+        self.write(0x0100 + self.stack_pointer, self.program_counter & 0x00FF)
+        self.stack_pointer -= 1
+        self.program_counter = self.address_abs
+        return 0
+
+    def op_jmp(self):
+        self.program_counter = self.address_abs
+        return 0
+
+    def op_bit(self):
+        data = self.fetch()
+        temp = self.reg_accumulator & data
+        self.update_flag(Flags.Z, (temp & 0x00FF) == 0x00);
+        self.update_flag(Flags.N, data & (1 << 7));
+        self.update_flag(Flags.V, data & (1 << 6));
+
+
+
 
     def execute_opcode(self, mnemonic):
         pass

@@ -20,8 +20,7 @@ class Bus:
 
     def read(self, address, read_only=False):
         if 0x0000 <= address <= 0xFFFF:
-            return 0x25
-            #return self.ram[address]
+            return self.ram[address]
         else:
             return 0x00
         pass
