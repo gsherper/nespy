@@ -12,16 +12,15 @@ class NES:
         pass
 
     def load_rom(self, file_name):
-
         with open(file_name, mode='rb') as file:
             rom = file.read()
             self.cart.load(rom)
-        pass
 
     def start(self):
+        self.bus.connect_device(self.cart)
+        self.cart.load_to_memory()
         self.bus.connect_device(self.cpu)
         self.cpu.reset()
-        pass
 
     def emulate(self):
-        self.cpu.clock()
+        return self.cpu.clock()

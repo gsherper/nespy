@@ -121,3 +121,11 @@ class Cart:
 
     def get_chr_rom(self):
         return self.chr_rom
+
+    def load_to_memory(self):
+        for index, bank in enumerate(self.prg_rom):
+            if index == 0:
+                self.bus.load_prg_rom(location=0x8000, rom_bank=self.prg_rom[index])
+            else:
+                self.bus.load_prg_rom(location=0xC000, rom_bank=self.prg_rom[index])
+

@@ -126,7 +126,8 @@ class CPU:
         self.program_counter += 1
         high_byte = self.read(self.program_counter)
         self.program_counter += 1
-        self.address_abs = (high_byte << 8 | low_byte) + self.reg_x_index
+        self.address_abs = ((high_byte << 8) | low_byte)
+        self.address_abs += self.reg_x_index
         if self.address_abs & 0xFF00 != low_byte << 8:
             return 1
         return 0
@@ -136,8 +137,9 @@ class CPU:
         self.program_counter += 1
         high_byte = self.read(self.program_counter)
         self.program_counter += 1
-        self.address_abs = (high_byte << 8 | low_byte)+ self.reg_y_index
-        if self.address_abs & 0xFF00 != high_byte << 8:
+        self.address_abs = ((high_byte << 8) | low_byte)
+        self.address_abs += self.reg_y_index
+        if (self.address_abs & 0xFF00) != (high_byte << 8):
             return 1
         return 0
 
@@ -189,6 +191,7 @@ class CPU:
     def fetch(self):
         if self.opcode["addr_mode"] != AddrMode.ADDR_IMM:
             self.data_fetched = self.read(self.address_abs)
+            print("<-",hex(self.data_fetched))
         return self.data_fetched
 
     def op_and(self):
@@ -384,19 +387,22 @@ class CPU:
         return 0
 
     def op_brk(self):
-        self.update_flag(Flags.I, 1)
-        self.update_flag(Flags.U, 1)
-        self.update_flag(Flags.B, 1)
         self.program_counter += 1
+
+        self.update_flag(Flags.I, 1)
         self.write(0x0100 + self.stack_pointer, (self.program_counter >> 8) & 0x00FF)
         self.stack_pointer -= 1
         self.write(0x0100 + self.stack_pointer, self.program_counter & 0x00FF)
         self.stack_pointer -= 1
-        self.write(0x0100 + self.stack_pointer, self.status)
+
+        self.update_flag(Flags.B, 1)
+        self.write(0x0100 + self.stack_pointer, self.reg_status)
         self.stack_pointer -= 1
 
-        lo = self.read(0xFFFE + 0)
-        hi = self.read(0xFFFE + 1)
+        self.update_flag(Flags.B, 0)
+
+        lo = self.read(0xFFFE)
+        hi = self.read(0xFFFF)
         self.program_counter = (hi << 8) | lo
         return 0
 
@@ -563,7 +569,7 @@ class CPU:
             self.update_flag(Flags.Z, 1)
         if self.reg_accumulator & 0x80:
             self.update_flag(Flags.N, 1)
-        return 0
+        return 1
 
     def op_eor(self):
         value = self.fetch()
@@ -634,7 +640,7 @@ class CPU:
             self.update_flag(Flags.Z, 1)
         if value & 0x80:
             self.update_flag(Flags.N, 1)
-        if self.opcode["address_mode"] == AddrMode.ADDR_ACCUMULATOR:
+        if self.opcode["addr_mode"] == AddrMode.ADDR_ACCUMULATOR:
             self.reg_accumulator = value
         else:
             self.write(self.address_abs, value & 0xFF)
@@ -673,26 +679,32 @@ class CPU:
 
 
     def execute_opcode(self, mnemonic):
-        pass
+        if mnemonic:
+            getattr(self, "op_"+mnemonic.lower())()
 
     def clock(self):
+        temp = None
         if self.cycles == 0:
             self.opcode = self.read(self.program_counter)
+            temp = self.opcode
+            print("PC:", hex(self.program_counter), " OPCODE:", hex(temp))
             self.program_counter += 1
             self.opcode = INSTRUCTION_SET[self.opcode]
+            print(self.opcode)
             self.cycles = self.opcode["cycles"]
             more_cycle1 = self.set_addr_mode(self.opcode["addr_mode"])
             more_cycle2 = self.execute_opcode(self.opcode["mnemonic"])
             if more_cycle1 and more_cycle2:
                 self.cycles += 1
-        self.cycles -= 1
 
+        self.cycles -= 1
+        return temp
 
     def read(self, address):
         return self.bus.read(address=address, read_only=False)
 
     def write(self, address, data):
-        self.bus.write(address=address, data=data)
+        self.bus.write(address=address & 0xFFFF, data=data & 0xFF)
 
 
 
