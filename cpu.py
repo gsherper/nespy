@@ -671,12 +671,9 @@ class CPU:
     def op_bit(self):
         data = self.fetch()
         temp = self.reg_accumulator & data
-        self.update_flag(Flags.Z, (temp & 0x00FF) == 0x00);
-        self.update_flag(Flags.N, data & (1 << 7));
-        self.update_flag(Flags.V, data & (1 << 6));
-
-
-
+        self.update_flag(Flags.Z, (temp & 0x00FF) == 0x00)
+        self.update_flag(Flags.N, data & (1 << 7))
+        self.update_flag(Flags.V, data & (1 << 6))
 
     def execute_opcode(self, mnemonic):
         if mnemonic:

@@ -18,19 +18,19 @@ class Flags(Enum):
 class AddrMode(Enum):
 
     # Addressing Modes
-    ADDR_ABS = "addr_absolute"  #
-    ADDR_ABS_X = "addr_absolute_x"  #
-    ADDR_ABS_Y = "addr_absolute_y"  #
+    ADDR_ABS = "addr_absolute"
+    ADDR_ABS_X = "addr_absolute_x"
+    ADDR_ABS_Y = "addr_absolute_y"
     ADDR_ACCUMULATOR = "addr_accumulator"
-    ADDR_INDIRECT = "addr_indirect" #
-    ADDR_INDIRECT_X = "addr_indirect_x" #
-    ADDR_INDIRECT_Y = "addr_indirect_y" #
-    ADDR_IMM = "addr_immediate"  #
-    ADDR_IMPLIED = "addr_implied"  #
+    ADDR_INDIRECT = "addr_indirect"
+    ADDR_INDIRECT_X = "addr_indirect_x"
+    ADDR_INDIRECT_Y = "addr_indirect_y"
+    ADDR_IMM = "addr_immediate"
+    ADDR_IMPLIED = "addr_implied"
     ADDR_RELATIVE = "addr_relative"
-    ADDR_ZERO_PAGE = "addr_zeropage"  #
-    ADDR_ZERO_PAGE_X = "addr_zeropage_x"  #
-    ADDR_ZERO_PAGE_Y = "addr_zeropage_y"  #
+    ADDR_ZERO_PAGE = "addr_zeropage"
+    ADDR_ZERO_PAGE_X = "addr_zeropage_x"
+    ADDR_ZERO_PAGE_Y = "addr_zeropage_y"
 
 INSTRUCTION_SET = {
     # ADC - Add Memory to Accumulator with Carry
